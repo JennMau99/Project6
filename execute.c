@@ -36,6 +36,7 @@ int execute(arglist *argstruct)
 	pipenum = countargs(argstruct);
 	pipes = (int *) malloc(sizeof(int) * 2 * pipenum);
 
+
 	/* Creates all the pipes needed to execute the full command */
 	for (i = 0; i < pipenum * 2; i++)
 	{
@@ -80,6 +81,9 @@ int execute(arglist *argstruct)
 			/* Close the pipes (stdin and stdout have been set) */
 			for (i = 0; i < pipenum * 2; i++)
 				close(pipes[i]);
+			for (i = 0; i < argstruct->argc; i++)
+				fprintf(stderr, "%s", argstruct->argv[i]);
+
 			if (execvp(argstruct->argv[0], argstruct->argv) == -1)
 			{
 				fprintf(stderr, "execvp failed.\n");
