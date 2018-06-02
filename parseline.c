@@ -22,13 +22,13 @@ void printlist()
 		for(i = 0; i < find->argc; i++)
 		{
 			printf("%s ", find->argv[i]);
-
+			
 		}	
 
 		/*printf("input %s", find->input);
 		printf("output %s", find->output);
-		printf("argc %d", find->argc);
-		*/find = find->next;
+		*/printf("\nargc %d", find->argc);
+		find = find->next;
 
 	}
 
@@ -171,8 +171,8 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 	int wc = 0;
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
-	new_node->argv = malloc(10 * sizeof(char*));
-
+	new_node->argv = malloc(10 * sizeof(char *));
+	
 	/*new_node->input = (char *)malloc(512 * sizeof(char));
 	new_node->output = (char *)malloc(512 * sizeof(char));	
 	*/
@@ -208,6 +208,9 @@ int getline(char *array, int stage, int startpipe, int endpipe)
           
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
                 {
+
+			new_node->argv[argc] = malloc(512 * sizeof(char));
+
                         if(argc > 10)
 			{
 				fprintf(stderr, "too many arguments!");
@@ -215,15 +218,20 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 			}
 
 			strcpy(argv[argc], words);
-                        new_node->argv[argc] = words;
-			/*get commands*/
+                       
+			strcpy(new_node->argv[argc],words);
                         argc++;
 
                 }
 
+
+		
 		new_node->argc = argc;
 
-        
+
+    		if(new_node->argv == NULL)
+    		{
+       		} 
 	        if(sp == -1 && strcmp(words, "<") == 0)
 		{ 
                 	geti = 1;
@@ -254,7 +262,9 @@ int getline(char *array, int stage, int startpipe, int endpipe)
                 words = strtok(NULL, " ");
         }
 
-        printf("\n\tinput: ");
+
+
+	printf("\n\tinput: ");
         if(sp == -1)
                 printf("original stdin");
         else if(sp == -2)
@@ -281,8 +291,8 @@ int getline(char *array, int stage, int startpipe, int endpipe)
         }
 
         printf("\n");
-
 /*
+
 	printlist();
 */	
         return 0;
@@ -301,8 +311,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	status = readline(line);
-	if (status == 0)
+/*	if (status == 0)
 		execute(head);
-	return 0;
+*/	return 0;
 }
 
