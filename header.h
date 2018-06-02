@@ -3,15 +3,15 @@
  * Project 6
  */
 
-struct arglist {
+struct alist {
 	char input[512];
 	char output[512];
 	int argc;
 	char argv[10][512];
-	struct arglist *next;
-} arglist;
+	struct alist *next;
+} alist;
 
-typedef struct arglist arglist;
+typedef struct alist arglist;
 
 arglist *head;
 
