@@ -8,5 +8,8 @@ typedef struct arglist {
 	char *output;
 	int argc;
 	char **argv;
+	struct arglist *next;
 } arglist;
+
+int execute(arglist *argstruct);
 

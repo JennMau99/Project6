@@ -8,7 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-
+#include "header.h"
 
 int getline(char *array, int stage, int startpipe, int endpipe)
 {
