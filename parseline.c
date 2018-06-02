@@ -194,10 +194,11 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 	new_node->next = NULL;
 	/*new_node->argv = argv1;
 	*/
+		/*
         printf("\n--------");
         printf("\nStage %d: \"%s\"", stage, array);
         printf("\n--------");
-
+		*/
 
         words = strtok(array, " ");
 
@@ -260,7 +261,7 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 
 
                 words = strtok(NULL, " ");
-        }
+        }/*
 
 
 
@@ -291,6 +292,7 @@ int getline(char *array, int stage, int startpipe, int endpipe)
         }
 
         printf("\n");
+		*/
 /*
 
 	printlist();
