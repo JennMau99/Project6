@@ -3,13 +3,17 @@
  * Project 6
  */
 
-typedef struct arglist {
-	char *input;
-	char *output;
+struct arglist {
+	char input[512];
+	char output[512];
 	int argc;
-	char **argv;
+	char argv[10][512];
 	struct arglist *next;
 } arglist;
+
+typedef struct arglist arglist;
+
+arglist *head;
 
 int execute(arglist *argstruct);
 
