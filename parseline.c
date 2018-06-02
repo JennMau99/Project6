@@ -21,14 +21,14 @@ void printlist()
 	{
 		for(i = 0; i < find->argc; i++)
 		{
-			printf("here %s", find->argv[i]);
+			printf("%s ", find->argv[i]);
 
 		}	
 
-		printf("input %s", find->input);
+		/*printf("input %s", find->input);
 		printf("output %s", find->output);
 		printf("argc %d", find->argc);
-		find = find->next;
+		*/find = find->next;
 
 	}
 
@@ -165,10 +165,13 @@ int getline(char *array, int stage, int startpipe, int endpipe)
         char * words;	
 
 	/* head * arglist */
-	char **argv1 = malloc(10 * sizeof(char*));
+	/*char **argv1 = malloc(10 * sizeof(char*));
+	*/
 	int wc = 0;
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
+	new_node->argv = malloc(10 * sizeof(char*));
+
 	/*new_node->input = (char *)malloc(512 * sizeof(char));
 	new_node->output = (char *)malloc(512 * sizeof(char));	
 	*/
@@ -207,11 +210,11 @@ int getline(char *array, int stage, int startpipe, int endpipe)
                         if(argc > 10)
 			{
 				fprintf(stderr, "too many arguments!");
-				return 1;
+				return -1;
 			}
 
 			strcpy(argv[argc], words);
-                        strcpy(new_node->argv[argc], words);
+                        new_node->argv[argc] = words;
 			/*get commands*/
                         argc++;
 
@@ -278,9 +281,9 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 
         printf("\n");
 
-
-	/*printlist();
-	*/
+/*
+	printlist();
+*/	
         return 0;
 
 
