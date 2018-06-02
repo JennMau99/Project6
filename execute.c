@@ -27,6 +27,7 @@ int countargs(arglist *argstruct)
 
 int execute(arglist *argstruct)
 {
+	int execstatus;
 	int i;
 	pid_t p;
 	int *pipes;
@@ -85,7 +86,7 @@ int execute(arglist *argstruct)
 				return -1;
 			}
 		}
-		waitpid(p);
+		wait(&execstatus);
 		argstruct = argstruct->next;
 		count++;
 	}

@@ -38,6 +38,7 @@ void printlist()
 
 int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 {
+	int status = 0;
 	int leftchevron = 0;
 	int rightchevron = 0;
 	int i;
@@ -81,9 +82,9 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 		fprintf(stderr, "cmd: ambiguous output\n");
 		return -1;
 	}
-	getline(stage, stagenum, startpipe, endpipe);
+	status = getline(stage, stagenum, startpipe, endpipe);
 
-	return 0;
+	return status;
 }
 
 int readline(char *line)
@@ -124,7 +125,7 @@ int readline(char *line)
 			if(limit > 10)
 			{
 				fprintf(stderr, "too many commands!");
-				return 1;
+				return -1;
 			}
 			check = checkstage(stage, stagenum, startpipe, endpipe);
 			if (check == -1)
@@ -140,7 +141,7 @@ int readline(char *line)
 	if(limit > 10)
         {
         	fprintf(stderr, "too many commands!");
-                return 1;
+                return -1;
         }
 	check = checkstage(stage, stagenum, startpipe, endpipe);
 	if (check == -1)
@@ -292,13 +293,16 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 /* We probably shouldn't have main doing too much */
 int main(int argc, char *argv[])
 {
+	int status = 0;
 	char line[513] = {0};
 	if (argc > 1)
 	{
 		fprintf(stderr, "parseline itself doesn't take args\n");
 		return -1;
 	}
-	readline(line);
+	status = readline(line);
+	if (status == 0)
+		execute(head);
 	return 0;
 }
 
