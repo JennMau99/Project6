@@ -313,8 +313,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	status = readline(line);
-/*	if (status == 0)
+	if (status == 0)
 		execute(head);
-*/	return 0;
+	return 0;
 }
 

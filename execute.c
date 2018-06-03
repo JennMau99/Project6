@@ -45,9 +45,10 @@ int execute(arglist *argstruct)
 			fprintf(stderr, "Pipe %d failed.\n", i * 2);
 			return -1;
 		}
+		fprintf(stderr, "Pipe %d opened\n", i);
 	}
 	/* Each command in argstruct is executed */
-	while (argstruct)
+	while (argstruct != NULL)
 	{
 		/* Forks, runs if fork() fails */
 		if ((p = fork()) == -1)
@@ -93,11 +94,14 @@ int execute(arglist *argstruct)
 		wait(&execstatus);
 		argstruct = argstruct->next;
 		count++;
+		fprintf(stderr, "here\n");
 	}
 	
 	/* Only the parent will make it to this point- close the pipes */
 	for (i = 0; i < pipenum * 2; i++)
+	{
+		fprintf(stderr, "Pipe %d closed\n", i);
 		close(pipes[i]);
-
+	}
 	return 0;	
 }
