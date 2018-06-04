@@ -25,83 +25,52 @@ int countargs(arglist *argstruct)
 	return count;
 }
 
+int launchcmd(int origfd, arglist *argstruct)
+{
+	int fd[2];
+	pid_t pid;
+	pipe(fd);
+	if ((pid = fork()) < 0)
+	{
+		fprintf(stderr, "Fork failed\n");
+		return -1;
+	}
+	/* Child runs this */
+	if (pid == 0)
+	{
+		/* Don't need to dup2 read if it's stdin */
+		if (origfd != 0)
+		{
+			dup2(fd[0], 0);
+		}
+		/* Don't need to dup2 write if it's stdout */
+		if (argstruct->next != NULL)
+		{
+			dup2(fd[1], 1);
+		}
+		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
+		{
+			fprintf(stderr, "Exec failed\n");
+			return -1;
+		}
+	}
+	close(fd[0]);
+	close(fd[1]);
+	return fd[0];
+}
+
 int execute(arglist *argstruct)
 {
-	int execstatus;
+	int argnum;
 	int i;
-	pid_t p;
-	int *pipes;
-	int count = 0;
-	int pipenum;
-	pipenum = countargs(argstruct);
-	pipes = (int *) malloc(sizeof(int) * 2 * pipenum);
-
-
-	/* Creates all the pipes needed to execute the full command */
-	for (i = 0; i < pipenum * 2; i++)
+	int origfd = 0;
+	argnum = countargs(argstruct);
+	for (i = 0; i < argnum; i++)
 	{
-		if (pipe(pipes + i * 2) == -1)
-		{
-			fprintf(stderr, "Pipe %d failed.\n", i * 2);
-			return -1;
-		}
-		fprintf(stderr, "Pipe %d opened\n", i);
-	}
-	/* Each command in argstruct is executed */
-	while (argstruct != NULL)
-	{
-		/* Forks, runs if fork() fails */
-		if ((p = fork()) == -1)
-		{
-			fprintf(stderr, "fork failed.\n");
-			return -1;
-		}
-		/* The child runs this */
-		if (p == 0)
-		{
-			/* Sets the stdin for the current command to the previous
- 			   command's stdout (if applicable) */
-			if (count)
-			{
-				if (dup2(pipes[(count - 1) * 2], 0) == -1)
-				{
-					fprintf(stderr, "Error when using dup2 on input pipe %d.\n", (count - 1) * 2);
-					return -1;	
-				}
-			}
-			/* Sets the stdout for the current command to the next
- 			   command's stdin (if applicable) */
-			if (argstruct -> next)
-			{
-				if (dup2(pipes[count * 2 + 1], 1) == -1)
-				{
-					fprintf(stderr, "Error when using dup2 on output pipe %d.\n", count * 2 + 1);
-					return -1;
-				}
-			}
-			/* Close the pipes (stdin and stdout have been set) */
-			for (i = 0; i < pipenum * 2; i++)
-				close(pipes[i]);
-			for (i = 0; i < argstruct->argc; i++)
-				fprintf(stderr, "%s", argstruct->argv[i]);
-
-			if (execvp(argstruct->argv[0], argstruct->argv) == -1)
-			{
-				fprintf(stderr, "execvp failed.\n");
-				return -1;
-			}
-		}
-		wait(&execstatus);
+		origfd = launchcmd(origfd, argstruct);
 		argstruct = argstruct->next;
-		count++;
-		fprintf(stderr, "here\n");
+		if (origfd < 0)
+			return -1;
 	}
-	
-	/* Only the parent will make it to this point- close the pipes */
-	for (i = 0; i < pipenum * 2; i++)
-	{
-		fprintf(stderr, "Pipe %d closed\n", i);
-		close(pipes[i]);
-	}
-	return 0;	
+	return 0;
 }
