@@ -25,11 +25,9 @@ int countargs(arglist *argstruct)
 	return count;
 }
 
-int launchcmd(int origfd, arglist *argstruct)
+int launchcmd(int origfd, int newfd, arglist *argstruct)
 {
-	int fd[2];
 	pid_t pid;
-	pipe(fd);
 	if ((pid = fork()) < 0)
 	{
 		fprintf(stderr, "Fork failed\n");
@@ -41,12 +39,14 @@ int launchcmd(int origfd, arglist *argstruct)
 		/* Don't need to dup2 read if it's stdin */
 		if (origfd != 0)
 		{
-			dup2(fd[0], 0);
+			dup2(origfd, 0);
+			close(origfd);
 		}
 		/* Don't need to dup2 write if it's stdout */
 		if (argstruct->next != NULL)
 		{
-			dup2(fd[1], 1);
+			dup2(newfd, 1);
+			close(newfd);
 		}
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
@@ -54,9 +54,9 @@ int launchcmd(int origfd, arglist *argstruct)
 			return -1;
 		}
 	}
-	close(fd[0]);
-	close(fd[1]);
-	return fd[0];
+	close(origfd);
+	close(newfd);
+	return 0;
 }
 
 int execute(arglist *argstruct)
@@ -64,11 +64,14 @@ int execute(arglist *argstruct)
 	int argnum;
 	int i;
 	int origfd = 0;
+	int newfd[2];
 	argnum = countargs(argstruct);
 	for (i = 0; i < argnum; i++)
 	{
-		origfd = launchcmd(origfd, argstruct);
+		pipe(newfd);
+		origfd = launchcmd(origfd, newfd[1], argstruct);
 		argstruct = argstruct->next;
+		origfd = newfd[0];
 		if (origfd < 0)
 			return -1;
 	}
