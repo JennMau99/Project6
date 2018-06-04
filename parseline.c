@@ -171,6 +171,9 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 	int wc = 0;
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
+	memset(new_node, '\0', sizeof(arglist));
+
+
 	new_node->argv = malloc(10 * sizeof(char *));
 	
 	/*new_node->input = (char *)malloc(512 * sizeof(char));
@@ -202,7 +205,10 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 
         words = strtok(array, " ");
 
-
+/*	memset((new_node->input), '\0', 512);
+	memset((new_node->output), '\0', 512);
+*/
+	fprintf(stderr, new_node->input);
         while(words != NULL)
         {
 
@@ -239,7 +245,7 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 		}
                 else if(geti == 1)
                 {
-			strcpy(new_node->input, words);
+			strcpy(new_node->input, words);			
 			strcpy(input, words);
                         geti = 0;
                         sp = -2;
@@ -253,8 +259,8 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 		}
 		else if(geto == 1)
                 {
-			strcpy(new_node->input, words);
-                        strcpy(output, words);
+			strcpy(new_node->output, words);
+			strcpy(output, words);
                         geto = 0;
                         ep = -2;
                 }
@@ -306,15 +312,19 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 int main(int argc, char *argv[])
 {
 	int status = 0;
+	int a = 0;
 	char line[513] = {0};
 	if (argc > 1)
 	{
 		fprintf(stderr, "parseline itself doesn't take args\n");
 		return -1;
 	}
-	status = readline(line);
-	if (status == 0)
-		execute(head);
+	while(a == 0)
+	{
+		status = readline(line);
+		if (status == 0)
+			execute(head);
+	}
 	return 0;
 }
 
