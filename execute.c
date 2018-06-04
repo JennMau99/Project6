@@ -28,6 +28,18 @@ int countargs(arglist *argstruct)
 int launchcmd(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
+	if (argstruct->next == NULL)
+	{
+		close(newfd);
+		if (origfd != 0)
+			dup2(origfd, 0);
+		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
+		{
+			fprintf(stderr, "Exec failed on last stage\n");
+			return -1;
+		}
+	}
+	
 	if ((pid = fork()) < 0)
 	{
 		fprintf(stderr, "Fork failed\n");
@@ -36,6 +48,17 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	/* Child runs this */
 	if (pid == 0)
 	{
+		if (argstruct->next == NULL)
+		{
+			close(newfd);
+			if (origfd != 0)
+				dup2(origfd, 0);
+			if (execvp(argstruct->argv[0], argstruct->argv) < 0)
+			{
+				fprintf(stderr, "Exec failed on last stage\n");
+				return -1;
+			}
+		}
 		/* Don't need to dup2 read if it's stdin */
 		if (origfd != 0)
 		{
@@ -43,7 +66,7 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 			close(origfd);
 		}
 		/* Don't need to dup2 write if it's stdout */
-		if (argstruct->next != NULL)
+		if (newfd != 1)
 		{
 			dup2(newfd, 1);
 			close(newfd);
@@ -69,7 +92,11 @@ int execute(arglist *argstruct)
 	for (i = 0; i < argnum; i++)
 	{
 		pipe(newfd);
-		origfd = launchcmd(origfd, newfd[1], argstruct);
+		if (argstruct-> next != NULL)
+			origfd = launchcmd(origfd, newfd[1], argstruct);
+		else
+			return launchcmd(origfd, newfd[1], argstruct);
+		close(newfd[1]);
 		argstruct = argstruct->next;
 		origfd = newfd[0];
 		if (origfd < 0)
