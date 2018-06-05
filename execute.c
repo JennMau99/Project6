@@ -110,7 +110,7 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		{
 			dup2(origfd, 0);
 		}
-		close(newfd);
+		/*close(newfd);*/
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			fprintf(stderr, "Exec failed on last stage\n");
@@ -120,7 +120,8 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 	wait(NULL);
 	if (origfd != 0)
 		close(origfd);
-	close(newfd);
+	if (newfd != 1)
+		close(newfd);
 	return 0;
 }
 
@@ -131,6 +132,11 @@ int execute(arglist *argstruct)
 	int origfd = 0;
 	int newfd[2];
 	argnum = countargs(argstruct);
+	if (argstruct->next == NULL)
+	{
+		origfd = launchfinal(origfd, 1, argstruct);
+		return 0;
+	}
 	for (i = 0; i < argnum; i++)
 	{
 		if (argstruct->next != NULL)

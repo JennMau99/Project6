@@ -129,6 +129,15 @@ int readline(char *line)
 	}
 	if (strcmp(line, "exit") == 0)
 		return 2;
+	/* band aids are amazing */
+	for (i = 0; i < length; i++)
+	{	
+		if (line[i] == '|')
+			j = 1;
+	}
+	if (j == 0)
+		return checkstage(line, 0, -1, -1);
+	j = 0;
 	for (i = 0; i < length; i++)
 	{
 		if (line[i] != '|')
