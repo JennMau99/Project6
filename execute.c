@@ -31,34 +31,6 @@ int countargs(arglist *argstruct)
 int launchcmd(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
-	int hi;
-	if (argstruct->next == NULL)
-	{
-		/*fprintf(stderr, argstruct->input);
-		fprintf(stderr, argstruct->output);
-		fprintf(stderr, "\n%lu", strlen(argstruct->output));	
-		*/
-		if(strlen(argstruct->output) != 0)
-		{
-			newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
-			dup2(newfd, 1);
-		}
-		if(strlen(argstruct->input) != 0)
-		{
-			origfd = open(argstruct->input, O_RDONLY);
-		}
-		if (origfd != 0)
-		{
-			dup2(origfd, 0);
-		}
-		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
-		{
-			fprintf(stderr, "Exec failed on last stage\n");
-			return -1;
-		}
-		close(newfd);
-	}
-	
 	if ((pid = fork()) < 0)
 	{
 		fprintf(stderr, "Fork failed\n");
@@ -69,45 +41,30 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	{
 		if (argstruct->next == NULL)
 		{
-			if(strlen(argstruct->output) != 0)
-                	{
-                        	newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
-                        	dup2(newfd, 1);
-                	}
-			if(strlen(argstruct->input) != 0)
-                	{
-                        	origfd = open(argstruct->input, O_RDONLY);
-                	}
 			if (origfd != 0)
+			{
 				dup2(origfd, 0);
+			}
 			if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 			{
 				fprintf(stderr, "Exec failed on last stage\n");
 				return -1;
 			}
-			close(newfd);
 		}
+
 		/* Don't need to dup2 read if it's stdin */
-	
 		if (origfd != 0)
 		{
-			if(argstruct->input)
-			{
-
-			}
 			dup2(origfd, 0);
 			close(origfd);
 		}
 		/* Don't need to dup2 write if it's stdout */
 		if (newfd != 1)
 		{
-			if(argstruct->output)
-                        {
-
-                        }
 			dup2(newfd, 1);
 			close(newfd);
 		}
+
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			fprintf(stderr, "Exec failed\n");
@@ -116,6 +73,33 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	}
 	close(origfd);
 	close(newfd);
+	return 0;
+}
+
+int launchfinal(int origfd, int newfd, arglist *argstruct)
+{
+	pid_t pid;
+	if ((pid = fork()) < 0)
+	{
+		fprintf(stderr, "Fork failed\n");
+		return -1;
+	}
+	/* Child runs this */
+	if (pid == 0)
+	{
+		if (origfd != 0)
+		{
+			dup2(origfd, 0);
+		}
+		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
+		{
+			fprintf(stderr, "Exec failed on last stage\n");
+			return -1;
+		}
+	}
+	wait(NULL);
+	/*close(origfd);
+	close(newfd);*/
 	return 0;
 }
 
@@ -128,16 +112,18 @@ int execute(arglist *argstruct)
 	argnum = countargs(argstruct);
 	for (i = 0; i < argnum; i++)
 	{
-		pipe(newfd);
-		if (argstruct-> next != NULL)
+		if (argstruct->next != NULL)
+		{
+			pipe(newfd);
 			origfd = launchcmd(origfd, newfd[1], argstruct);
-		else
-			return launchcmd(origfd, newfd[1], argstruct);
-		close(newfd[1]);
+			close(newfd[1]);
+			if (origfd < 0)
+				return -1;
+			origfd = newfd[0];
+		}
+		if (argstruct->next == NULL)
+			origfd = launchfinal(origfd, newfd[1], argstruct);
 		argstruct = argstruct->next;
-		origfd = newfd[0];
-		if (origfd < 0)
-			return -1;
 	}
 	return 0;
 }

@@ -319,12 +319,9 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "parseline itself doesn't take args\n");
 		return -1;
 	}
-	while(a == 0)
-	{
-		status = readline(line);
-		if (status == 0)
-			execute(head);
-	}
+	status = readline(line);
+	if (status == 0)
+		execute(head);
 	return 0;
 }
 
