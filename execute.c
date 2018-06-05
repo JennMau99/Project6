@@ -39,6 +39,7 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	/* Child runs this */
 	if (pid == 0)
 	{
+		/*
 		if (argstruct->next == NULL)
 		{
 			if(strlen(argstruct->output) != 0)
@@ -60,18 +61,16 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 				return -1;
 			}
 		}
-
+		*/
 		/* Don't need to dup2 read if it's stdin */
 		if (origfd != 0)
 		{
 			dup2(origfd, 0);
-			close(origfd);
 		}
 		/* Don't need to dup2 write if it's stdout */
 		if (newfd != 1)
 		{
 			dup2(newfd, 1);
-			close(newfd);
 		}
 
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
@@ -80,7 +79,9 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 			return -1;
 		}
 	}
-	close(origfd);
+	wait(NULL);
+	if (origfd != 0)
+		close(origfd);
 	close(newfd);
 	return 0;
 }
@@ -98,8 +99,8 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 	{
 		if(strlen(argstruct->output) != 0)
  	    {
-  		      newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
-              dup2(newfd, 1);
+  			newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
+        	dup2(newfd, 1);
         }
         if(strlen(argstruct->input) != 0)
         {
@@ -109,6 +110,7 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		{
 			dup2(origfd, 0);
 		}
+		close(newfd);
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			fprintf(stderr, "Exec failed on last stage\n");
@@ -116,8 +118,9 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		}
 	}
 	wait(NULL);
-	/*close(origfd);
-	close(newfd);*/
+	if (origfd != 0)
+		close(origfd);
+	close(newfd);
 	return 0;
 }
 
@@ -143,5 +146,7 @@ int execute(arglist *argstruct)
 			origfd = launchfinal(origfd, newfd[1], argstruct);
 		argstruct = argstruct->next;
 	}
+	close(newfd[0]);
+	fflush(stdout);
 	return 0;
 }

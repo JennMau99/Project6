@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "header.h"
 
 /* getline takes char array of 512, int startpipe, int endpipe */
@@ -21,20 +22,14 @@ void printlist()
 	{
 		for(i = 0; i < find->argc; i++)
 		{
-			printf("%s ", find->argv[i]);
-			
+			printf("%s ", find->argv[i]);	
 		}	
 
-		/*printf("input %s", find->input);
-		printf("output %s", find->output);
-		*/printf("\nargc %d", find->argc);
+		printf("\nargc %d", find->argc);
 		find = find->next;
-
 	}
 
 }
-
-
 
 int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 {
@@ -44,7 +39,6 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 	int i;
 	int length;
 	int notzero = 0;
-	/*fprintf(stdout, "stage %d: %s\n", stagenum, stage); */
 	length = strlen(stage);
 	for (i = 0; i < length; i++)
 	{
@@ -87,6 +81,28 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 	return status;
 }
 
+int inputline(char line[513])
+{
+	char c;
+	int i = 0;
+	fprintf(stdout, "line: ");
+	c = getchar();
+	while (c != '\n' && c != EOF)
+	{
+		line[i] = c;
+		i++;
+		if (i > 511)
+		{
+			printf("you shouldn't be here");
+			return -1;
+		}
+		c = getchar();
+	}
+	line[i++] = c;
+	line[i] = '\0';
+	return 0;
+}
+
 int readline(char *line)
 {
 	int i = 0;
@@ -98,19 +114,21 @@ int readline(char *line)
 	int check = 0;
 	int limit = 0;
 	char stage[513] = {0};
-	fprintf(stdout, "line: ");
-	fgets(line, 513, stdin);
-	if (line[512] != 0)
+	if (inputline(line) < 0)
 	{
 		fprintf(stderr, "cmd: too many arguments\n");
 		return -1;
 	}
+	if (strcmp(line, "exit\n") == 0)
+		return 2;
 	length = strlen(line);
 	if (length == 0)
 	{
 		fprintf(stderr, "cmd: no commands given\n");
 		return -1;
 	}
+	if (strcmp(line, "exit") == 0)
+		return 2;
 	for (i = 0; i < length; i++)
 	{
 		if (line[i] != '|')
@@ -141,7 +159,7 @@ int readline(char *line)
 	if(limit > 10)
         {
         	fprintf(stderr, "too many commands!");
-                return -1;
+            return -1;
         }
 	check = checkstage(stage, stagenum, startpipe, endpipe);
 	if (check == -1)
@@ -151,34 +169,25 @@ int readline(char *line)
 
 int getline(char *array, int stage, int startpipe, int endpipe)
 {
-        int i = 0;
-        int sp = startpipe;
-        int ep = endpipe;
-        int geti = 0;
-        int geto = 0;
+    int sp = startpipe;
+    int ep = endpipe;
+    int geti = 0;
+    int geto = 0;
+ 
+	char input[512];
+    char output[512];
 
-        char input[512];
-        char output[512];
+    int argc = 0;
+    char argv[10][512];
 
-        int argc = 0;
-        char argv[10][512];
+    char * words;	
 
-        char * words;	
-
-	/* head * arglist */
-	/*char **argv1 = malloc(10 * sizeof(char*));
-	*/
-	int wc = 0;
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
 	memset(new_node, '\0', sizeof(arglist));
 
-
 	new_node->argv = malloc(10 * sizeof(char *));
 	
-	/*new_node->input = (char *)malloc(512 * sizeof(char));
-	new_node->output = (char *)malloc(512 * sizeof(char));	
-	*/
 	if(head == NULL)
 	{
 		head = new_node;
@@ -193,135 +202,85 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 		find->next = new_node;
 	}
 	
-	
 	new_node->next = NULL;
-	/*new_node->argv = argv1;
-	*/
-		/*
-        printf("\n--------");
-        printf("\nStage %d: \"%s\"", stage, array);
-        printf("\n--------");
-		*/
 
-        words = strtok(array, " ");
+    words = strtok(array, " ");
 
-/*	memset((new_node->input), '\0', 512);
-	memset((new_node->output), '\0', 512);
-*/
 	fprintf(stderr, new_node->input);
-        while(words != NULL)
-        {
-
-          
+    while(words != NULL)
+    {     
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
-                {
-
+        {
 			new_node->argv[argc] = malloc(512 * sizeof(char));
 
-                        if(argc > 10)
+            if(argc > 10)
 			{
 				fprintf(stderr, "too many arguments!");
 				return -1;
 			}
 
-			strcpy(argv[argc], words);
-                       
+			strcpy(argv[argc], words);           
 			strcpy(new_node->argv[argc],words);
-                        argc++;
-
-                }
-
-
+            argc++;
+        }
 		
 		new_node->argc = argc;
-
-
-    		if(new_node->argv == NULL)
-    		{
-       		} 
-	        if(sp == -1 && strcmp(words, "<") == 0)
+	    if(sp == -1 && strcmp(words, "<") == 0)
 		{ 
-                	geti = 1;
+        	geti = 1;
 		}
-                else if(geti == 1)
-                {
+        else if(geti == 1)
+        {
 			strcpy(new_node->input, words);			
 			strcpy(input, words);
-                        geti = 0;
-                        sp = -2;
-                }
-
-
-                if(ep == -1 && strcmp(words, ">") == 0)
-                {
-		        geto = 1;
-			
+            geti = 0;
+            sp = -2;
+        }
+        if(ep == -1 && strcmp(words, ">") == 0)
+        {
+			geto = 1;
 		}
 		else if(geto == 1)
-                {
+        {
 			strcpy(new_node->output, words);
 			strcpy(output, words);
-                        geto = 0;
-                        ep = -2;
-                }
-
-
-                words = strtok(NULL, " ");
-        }/*
-
-
-
-	printf("\n\tinput: ");
-        if(sp == -1)
-                printf("original stdin");
-        else if(sp == -2)
-                printf(input);
-        else
-                printf("pipe from stage %d", sp);
-
-        printf("\n\toutput: ");
-	if(ep == -1)
-                printf("original stdout");
-        else if(ep == -2)
-                printf(output);
-        else
-                printf("pipe to stage %d", ep);
-
-
-        printf("\n\targc: %d", argc);
-        printf("\n\targv: ");
-        for(i = 0; i < argc; i++)
-        {
-                printf("\"%s\"", argv[i]);
-                if(i != (argc - 1))
-                        printf(", ");
+            geto = 0;
+            ep = -2;
         }
-
-        printf("\n");
-		*/
-/*
-
-	printlist();
-*/	
-        return 0;
-
-
+            words = strtok(NULL, " ");
+	}
+    return 0;
 }
+
+int loop(int argc, char *argv[])
+{
+	int status = 1;
+	char line[513] = {0};
+	int i = 0;
+	setbuf(stdout, NULL);
+	while (1)
+	{
+		fflush(stdout);
+		for (i = 0; i < 513; i++)
+			line[i] = 0;
+		status = readline(line);
+		if (status == 2)
+			return 0;
+		if (status == 0)
+			execute(head);
+	}
+}
+
 
 /* We probably shouldn't have main doing too much */
 int main(int argc, char *argv[])
 {
-	int status = 0;
-	int a = 0;
-	char line[513] = {0};
 	if (argc > 1)
 	{
 		fprintf(stderr, "parseline itself doesn't take args\n");
 		return -1;
 	}
-	status = readline(line);
-	if (status == 0)
-		execute(head);
+	loop(argc, argv);
 	return 0;
 }
 
