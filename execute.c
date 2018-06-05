@@ -41,6 +41,15 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	{
 		if (argstruct->next == NULL)
 		{
+			if(strlen(argstruct->output) != 0)
+			{
+				newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
+				dup2(newfd, 1);
+			}
+			if(strlen(argstruct->input) != 0)
+			{
+				origfd = open(argstruct->input, O_RDONLY);
+			}
 			if (origfd != 0)
 			{
 				dup2(origfd, 0);
@@ -87,6 +96,15 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 	/* Child runs this */
 	if (pid == 0)
 	{
+		if(strlen(argstruct->output) != 0)
+ 	    {
+  		      newfd = open(argstruct->output, O_CREAT | O_WRONLY, 0700);
+              dup2(newfd, 1);
+        }
+        if(strlen(argstruct->input) != 0)
+        {
+              origfd = open(argstruct->input, O_RDONLY);
+        }
 		if (origfd != 0)
 		{
 			dup2(origfd, 0);
