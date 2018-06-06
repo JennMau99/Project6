@@ -31,6 +31,7 @@ int countargs(arglist *argstruct)
 int launchcmd(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
+	int status = 0;
 	if ((pid = fork()) < 0)
 	{
 		fprintf(stderr, "Fork failed\n");
@@ -76,20 +77,26 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			fprintf(stderr, "Exec failed\n");
-			exit(0);
+			exit(EXIT_FAILURE);
 			return -1;
 		}
 	}
-	wait(NULL);
+	wait(&status);
 	if (origfd != 0)
 		close(origfd);
 	close(newfd);
+	if (WIFEXITED(status))
+	{
+		if (WEXITSTATUS(status) != 0)
+			return -1;
+	}
 	return 0;
 }
 
 int launchfinal(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
+	int status = 0;
 	if ((pid = fork()) < 0)
 	{
 		fprintf(stderr, "Fork failed\n");
@@ -115,15 +122,20 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			fprintf(stderr, "Exec failed on last stage\n");
-			exit(0);
+			exit(EXIT_FAILURE);
 			return -1;
 		}
 	}
-	wait(NULL);
+	wait(&status);
 	if (origfd != 0)
 		close(origfd);
 	if (newfd != 1)
 		close(newfd);
+	if (WIFEXITED(status))
+	{
+		if (WEXITSTATUS(status) != 0)
+			return -1;
+	}
 	return 0;
 }
 
