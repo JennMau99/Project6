@@ -117,6 +117,12 @@ int inputline(char line[513])
 	int i = 0;
 	fprintf(stdout, "8-P ");
 	c = getchar();
+	if(c == EOF)
+	{
+		printf("^D\n");
+		exit(0);
+	}
+
 	while (c != '\n' && c != EOF)
 	{
 		line[i] = c;
@@ -130,7 +136,7 @@ int inputline(char line[513])
 	return 0;
 }
 
-int readline(char *line)
+int readline(char *line, int checker)
 {
 	int i = 0;
 	int j = 0;
@@ -141,14 +147,24 @@ int readline(char *line)
 	int check = 0;
 	int limit = 0;
 	char stage[513] = {0};
-	if (inputline(line) < 0)
+	if (checker == 1)
 	{
-		fprintf(stderr, "Too many arguments.\n");
-		return -1;
+		if(inputline(line) < 0)
+		{
+			fprintf(stderr, "Too many arguments.\n");
+			return -1;
+		}
 	}
+	
 	if (strcmp(line, "exit\n") == 0)
 		return 2;
-	length = strlen(line);
+/*
+	if(line == NULL)
+	{
+		printf("^D");	
+		return 2;
+	}
+*/	length = strlen(line);
 	if (length == 0)
 	{
 		fprintf(stderr, "cmd: no commands given\n");
@@ -303,7 +319,7 @@ int loop(int argc, char *argv[])
 		fflush(stdout);
 		for (i = 0; i < 513; i++)
 			line[i] = 0;
-		status = readline(line);
+		status = readline(line, 1);
 		if (status == 2)
 			return 0;
 		if (status == 0)
@@ -333,12 +349,38 @@ void handle(int hi)
 int main(int argc, char *argv[])
 {
 	
-
-	
+	int i = 0;
+	int len = 0;
+	char *str;
+	int status = 1;
 	signal(SIGINT, handle);
+	
 	if (argc > 1)
 	{
-		fprintf(stderr, "parseline itself doesn't take args\n");
+		for(i = 1; i < argc; i++)
+		{
+			len += strlen(argv[i]);	
+		}
+		str = (char *)malloc((len + i + 1) * sizeof(char));
+
+		for(i = 1; i < argc; i++)
+                {
+                	strcat(str, argv[i]);
+			if(i != (argc - 1))
+				strcat(str, " ");
+                }
+		strcat(str, "\0");
+		status = readline(str, 0);
+                if (status == 2)
+                        return 0;
+                if (status == 0)
+                {
+			if (strcmp(head->argv[0], "cd\n") == 0 || strcmp(head->argv[0], "cd") == 0)
+                        {
+                                changedirectory();
+                        }
+                        execute(head);
+                }
 		return -1;
 	}
 	loop(argc, argv);
