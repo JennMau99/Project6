@@ -3,6 +3,8 @@
  * Project 5
  */
 
+#include <signal.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +12,7 @@
 #include "header.h"
 
 /* getline takes char array of 512, int startpipe, int endpipe */
-int getline(char *array, int stage, int startpipe, int endpipe);
+int get_line(char *array, int stage, int startpipe, int endpipe);
 
 void printlist()
 {
@@ -76,7 +78,7 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 		fprintf(stderr, "cmd: ambiguous output\n");
 		return -1;
 	}
-	status = getline(stage, stagenum, startpipe, endpipe);
+	status = get_line(stage, stagenum, startpipe, endpipe);
 
 	return status;
 }
@@ -176,7 +178,7 @@ int readline(char *line)
 	return 0;
 }
 
-int getline(char *array, int stage, int startpipe, int endpipe)
+int get_line(char *array, int stage, int startpipe, int endpipe)
 {
     int sp = startpipe;
     int ep = endpipe;
@@ -218,7 +220,7 @@ int getline(char *array, int stage, int startpipe, int endpipe)
 	fprintf(stderr, new_node->input);
     while(words != NULL)
     {     
-		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
+	if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
         {
 			new_node->argv[argc] = malloc(512 * sizeof(char));
 
@@ -281,9 +283,21 @@ int loop(int argc, char *argv[])
 }
 
 
+
+void handle(int hi)
+{
+
+        printf("u didnt do it right, try ^D");
+        fflush(stdout);
+
+}
+
 /* We probably shouldn't have main doing too much */
 int main(int argc, char *argv[])
 {
+	
+
+	signal(SIGINT, handle);
 	if (argc > 1)
 	{
 		fprintf(stderr, "parseline itself doesn't take args\n");

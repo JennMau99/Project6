@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g  -Wall -ansi -pedantic
+CFLAGS = -g -Wall -pedantic
 MAIN = parseline
 OBJS = parseline.o execute.o
 all : $(MAIN)
