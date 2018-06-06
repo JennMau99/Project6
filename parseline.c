@@ -87,17 +87,14 @@ int inputline(char line[513])
 {
 	char c;
 	int i = 0;
-	fprintf(stdout, "line: ");
+	fprintf(stdout, "8-P ");
 	c = getchar();
 	while (c != '\n' && c != EOF)
 	{
 		line[i] = c;
 		i++;
 		if (i > 511)
-		{
-			printf("you shouldn't be here");
 			return -1;
-		}
 		c = getchar();
 	}
 	line[i++] = c;
@@ -118,7 +115,7 @@ int readline(char *line)
 	char stage[513] = {0};
 	if (inputline(line) < 0)
 	{
-		fprintf(stderr, "cmd: too many arguments\n");
+		fprintf(stderr, "Too many arguments.\n");
 		return -1;
 	}
 	if (strcmp(line, "exit\n") == 0)
@@ -127,7 +124,7 @@ int readline(char *line)
 	if (length == 0)
 	{
 		fprintf(stderr, "cmd: no commands given\n");
-		return -1;
+		return 3;
 	}
 	if (strcmp(line, "exit") == 0)
 		return 2;
@@ -153,7 +150,7 @@ int readline(char *line)
 			limit++;
 			if(limit > 10)
 			{
-				fprintf(stderr, "too many commands!");
+				fprintf(stderr, "Pipeline too deep.\n");
 				return -1;
 			}
 			check = checkstage(stage, stagenum, startpipe, endpipe);
@@ -169,7 +166,7 @@ int readline(char *line)
 	limit++;
 	if(limit > 10)
         {
-        	fprintf(stderr, "too many commands!");
+        	fprintf(stderr, "Pipeline too deep.\n");
             return -1;
         }
 	check = checkstage(stage, stagenum, startpipe, endpipe);
