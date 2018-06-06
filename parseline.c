@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include "header.h"
 #include <setjmp.h>
+#include <sys/stat.h>
 
 /* getline takes char array of 512, int startpipe, int endpipe */
 int get_line(char *array, int stage, int startpipe, int endpipe);
@@ -266,6 +267,7 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
             if(argc > 10)
 			{
 				fprintf(stderr, "Too many arguments.\n");
+				free(head);
 				return -1;
 			}
 
@@ -335,7 +337,6 @@ void handle(int hi)
 		fflush(stdout);
 		siglongjmp(ctrlc, 1);
 		return;        
-
 }
 
 /* We probably shouldn't have main doing too much */
@@ -346,10 +347,37 @@ int main(int argc, char *argv[])
 	int len = 0;
 	char *str;
 	int status = 1;
+	struct stat st;
+	FILE *file;
+	
+	char *line = NULL;
+	size_t len1 = 0;
+	char read;
+
+
 	signal(SIGINT, handle);
 	
+
+
+
 	if (argc > 1)
 	{
+		if(stat(argv[1], &st) > -1)
+		{
+			file = fopen(argv[1], "r");
+			while ((read = getline(&line, &len1, file)) != -1) {
+				status = readline(line, 0);
+				
+				if (status == 2)
+                 		       return 0;
+               	 		if (status == 0)
+                		{
+                        		execute(head);
+                		}	
+
+			}	
+			return 1;
+		}
 		for(i = 1; i < argc; i++)
 		{
 			len += strlen(argv[i]);	
