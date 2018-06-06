@@ -137,6 +137,7 @@ int execute(arglist *argstruct)
 	if (argstruct->next == NULL)
 	{
 		origfd = launchfinal(origfd, 1, argstruct);
+		free(head);
 		return 0;
 	}
 	for (i = 0; i < argnum; i++)
@@ -147,7 +148,10 @@ int execute(arglist *argstruct)
 			origfd = launchcmd(origfd, newfd[1], argstruct);
 			close(newfd[1]);
 			if (origfd < 0)
+			{
+				free(head);
 				return -1;
+			}
 			origfd = newfd[0];
 		}
 		if (argstruct->next == NULL)
@@ -156,5 +160,6 @@ int execute(arglist *argstruct)
 	}
 	close(newfd[0]);
 	fflush(stdout);
+	free(head);
 	return 0;
 }
