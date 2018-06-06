@@ -37,27 +37,25 @@ void printlist()
 
 }
 
-int changedirectory()
+int changedirectory(char *line)
 {
-	DIR *dir;
-	if (head->argc < 2)
+	char *token;
+	
+	token = strtok(line, " ");
+	token = strtok(NULL, " ");
+
+	if (token == NULL)
 	{
-		free(head);
 		return 0;
 	}
-	dir = opendir(head->argv[1]);
-	if (dir == NULL)
+	if (token[strlen(token) - 1] == '\n')
+		token[strlen(token) -1] = '\0';
+	
+	if (chdir(token) < 0)
 	{
-		fprintf(stderr, "%s: No such file or directory\n", head->argv[1]);
-		free(head);
+		fprintf(stderr, "%s: No such file or directory\n", token);
 		return -1;
 	}
-	if (dir)
-	{
-		closedir(dir);
-		chdir(head->argv[1]);
-	}
-	free(head);
 	return 0;	
 }
 
@@ -158,13 +156,13 @@ int readline(char *line, int checker)
 	
 	if (strcmp(line, "exit\n") == 0)
 		return 2;
-/*
-	if(line == NULL)
+	if (strncmp(line, "cd", 2) == 0 && (line[2] == '\n' || line[2] == ' '))
 	{
-		printf("^D");	
-		return 2;
+		changedirectory(line);
+		return 3;
 	}
-*/	length = strlen(line);
+
+	length = strlen(line);
 	if (length == 0)
 	{
 		fprintf(stderr, "cmd: no commands given\n");
@@ -324,12 +322,7 @@ int loop(int argc, char *argv[])
 			return 0;
 		if (status == 0)
 		{
-			if (strcmp(head->argv[0], "cd\n") == 0 || strcmp(head->argv[0], "cd") == 0)
-			{	
-				changedirectory();
-			}
-			else
-				execute(head);
+			execute(head);
 		}
 	}
 }
