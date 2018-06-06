@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <dirent.h>
 
 int countargs(arglist *argstruct)
 {
@@ -26,6 +26,20 @@ int countargs(arglist *argstruct)
 		argstruct = argstruct->next;
 	}
 	return count;
+}
+
+int checkerror(arglist *argstruct)
+{
+	DIR *dir = opendir(argstruct->argv[0]);
+	if (access(argstruct->argv[0], F_OK) == -1 && dir == NULL)
+	{
+		fprintf(stderr, "%s: No such file or directory\n", argstruct->argv[0]);
+		return 0;
+	}
+	if (dir)
+		closedir(dir);
+	fprintf(stderr, "%s: Permission denied\n", argstruct->argv[0]);
+	return 0;
 }
 
 int launchcmd(int origfd, int newfd, arglist *argstruct)
@@ -41,28 +55,6 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	/* Child runs this */
 	if (pid == 0)
 	{
-		/*
-		if (argstruct->next == NULL)
-		{
-			if(strlen(argstruct->output) != 0)
-			{
-				dup2(newfd, 1);
-			}
-			if(strlen(argstruct->input) != 0)
-			{
-				origfd = open(argstruct->input, O_RDONLY);
-			}
-			if (origfd != 0)
-			{
-				dup2(origfd, 0);
-			}
-			if (execvp(argstruct->argv[0], argstruct->argv) < 0)
-			{
-				fprintf(stderr, "Exec failed on last stage\n");
-				return -1;
-			}
-		}
-		*/
 		/* Don't need to dup2 read if it's stdin */
 		if (origfd != 0)
 		{
@@ -76,7 +68,8 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
-			fprintf(stderr, "Exec failed\n");
+			/*fprintf(stderr, "Exec failed\n");*/
+			checkerror(argstruct);
 			exit(EXIT_FAILURE);
 			return -1;
 		}
@@ -121,7 +114,8 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		/*close(newfd);*/
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
-			fprintf(stderr, "Exec failed on last stage\n");
+			/*fprintf(stderr, "Exec failed on last stage\n");*/
+			checkerror(argstruct);
 			exit(EXIT_FAILURE);
 			return -1;
 		}
