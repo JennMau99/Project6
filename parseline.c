@@ -9,10 +9,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "header.h"
+#include <setjmp.h>
 
 /* getline takes char array of 512, int startpipe, int endpipe */
 int get_line(char *array, int stage, int startpipe, int endpipe);
+sigjmp_buf ctrlc;
+
 
 void printlist()
 {
@@ -31,6 +35,30 @@ void printlist()
 		find = find->next;
 	}
 
+}
+
+int changedirectory()
+{
+	DIR *dir;
+	if (head->argc < 2)
+	{
+		free(head);
+		return 0;
+	}
+	dir = opendir(head->argv[1]);
+	if (dir == NULL)
+	{
+		fprintf(stderr, "%s: No such file or directory\n", head->argv[1]);
+		free(head);
+		return -1;
+	}
+	if (dir)
+	{
+		closedir(dir);
+		chdir(head->argv[1]);
+	}
+	free(head);
+	return 0;	
 }
 
 int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
@@ -53,29 +81,29 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 	}
 	if (length == 0 || notzero == 0)
 	{
-		fprintf(stderr, "invalid null command\n");
+		fprintf(stderr, "Invalid null command\n");
 		return -1;
 	}
 	if (stage[length - 1] == 10)
 		stage[length - 1] = '\0';
 	if (leftchevron > 1)
 	{
-		fprintf(stderr, "cmd: bad input redirection\n");
+		fprintf(stderr, "Bad input redirection\n");
 		return -1;
 	}
 	if (rightchevron > 1)
 	{
-		fprintf(stderr, "cmd: bad output redirection\n");
+		fprintf(stderr, "Bad output redirection\n");
 		return -1;
 	}
 	if (leftchevron  && startpipe != -1)
 	{
-		fprintf(stderr, "cmd: ambiguous input\n");
+		fprintf(stderr, "Ambiguous Input\n");
 		return -1;
 	}
 	if (rightchevron && endpipe != -1)
 	{
-		fprintf(stderr, "cmd: ambiguous output\n");
+		fprintf(stderr, "Ambiguous Output\n");
 		return -1;
 	}
 	status = get_line(stage, stagenum, startpipe, endpipe);
@@ -223,7 +251,7 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 
             if(argc > 10)
 			{
-				fprintf(stderr, "too many arguments!");
+				fprintf(stderr, "Too many arguments.\n");
 				return -1;
 			}
 
@@ -266,6 +294,10 @@ int loop(int argc, char *argv[])
 	char line[513] = {0};
 	int i = 0;
 	setbuf(stdout, NULL);
+
+
+	while(sigsetjmp(ctrlc, 1) != 0);
+
 	while (1)
 	{
 		fflush(stdout);
@@ -275,7 +307,14 @@ int loop(int argc, char *argv[])
 		if (status == 2)
 			return 0;
 		if (status == 0)
-			execute(head);
+		{
+			if (strcmp(head->argv[0], "cd\n") == 0 || strcmp(head->argv[0], "cd") == 0)
+			{	
+				changedirectory();
+			}
+			else
+				execute(head);
+		}
 	}
 }
 
@@ -283,9 +322,10 @@ int loop(int argc, char *argv[])
 
 void handle(int hi)
 {
-
-        printf("u didnt do it right, try ^D");
-        fflush(stdout);
+		printf("\n");
+		fflush(stdout);
+		siglongjmp(ctrlc, 1);
+		return;        
 
 }
 
@@ -294,6 +334,7 @@ int main(int argc, char *argv[])
 {
 	
 
+	
 	signal(SIGINT, handle);
 	if (argc > 1)
 	{

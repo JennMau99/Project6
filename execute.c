@@ -115,6 +115,7 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
 			/*fprintf(stderr, "Exec failed on last stage\n");*/
+			printf("Error here: %s\n", argstruct->argv[0]);
 			checkerror(argstruct);
 			exit(EXIT_FAILURE);
 			return -1;

@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -g -Wall -pedantic
-MAIN = parseline
+MAIN = mush
 OBJS = parseline.o execute.o
 all : $(MAIN)
 
