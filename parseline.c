@@ -368,11 +368,7 @@ int main(int argc, char *argv[])
                         return 0;
                 if (status == 0)
                 {
-			if (strcmp(head->argv[0], "cd\n") == 0 || strcmp(head->argv[0], "cd") == 0)
-                        {
-                                changedirectory();
-                        }
-                        execute(head);
+                	execute(head);
                 }
 		return -1;
 	}
