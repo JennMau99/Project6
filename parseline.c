@@ -153,7 +153,8 @@ int readline(char *line, int checker)
 			return -1;
 		}
 	}
-	
+	if (strcmp(line, "\n") == 0)
+		return 4;
 	if (strcmp(line, "exit\n") == 0)
 		return 2;
 	if (strncmp(line, "cd", 2) == 0 && (line[2] == '\n' || line[2] == ' '))
@@ -284,9 +285,9 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 
 
 
-	  words = strtok(array, " ");
+	words = strtok(array, " ");
 
-   while(words != NULL)
+   	while(words != NULL)
     {     
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
     	{
@@ -337,13 +338,9 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 
 int loop(int argc, char *argv[])
 {
-	arglist *nextstruct;
-	arglist *args;
-
 	int status = 1;
 	char line[513] = {0};
 	int i = 0;
-	int a = 0;
 
 	setbuf(stdout, NULL);
 
@@ -362,23 +359,6 @@ int loop(int argc, char *argv[])
 		{
 			execute(head);
 		}
-		args = head;
-		while(args)
-		{
-			nextstruct = args->next;
-			a = 0;
-			while(argv[a] != NULL)
-			{
-				free(args->argv[a]);
-				a++;
-			}
-			free(args->argv[a]);
-			free(args->argv);
-			free(args);
-			args = nextstruct;
-		}
-		head = NULL;
-		
 		freehead();
 	}
 }
@@ -412,7 +392,7 @@ int main(int argc, char *argv[])
 
 	if (argc > 1)
 	{
-		/*if(stat(argv[1], &st) > -1)
+		if(stat(argv[1], &st) > -1)
 		{
 			file = fopen(argv[1], "r");
 			while ((read = getline(&line, &len1, file)) != -1) 
@@ -449,7 +429,7 @@ int main(int argc, char *argv[])
         	{
         		execute(head);
         	}
-		free(str);*/
+		free(str);
 		return -1;
 	}
 	loop(argc, argv);

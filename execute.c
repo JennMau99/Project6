@@ -19,12 +19,19 @@
 
 void freehead()
 {
-
+	int a = 0;
 	arglist *nextstruct;
 	arglist *args = head;
 	while(args)
 	{
 		nextstruct = args->next;
+		a = 0;
+		while( args->argv[a] != NULL)
+		{
+			free(args->argv[a]);
+			a++;
+		}
+		free(args->argv[a]);
 		free(args->argv);
 		free(args);
 		args = nextstruct;
