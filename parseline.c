@@ -291,7 +291,7 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
     	{
 			/* Changed this from 512 to the word size */
-			new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
+		new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
         	if(argc > 10)
 			{
 				fprintf(stderr, "Too many arguments.\n");
@@ -343,6 +343,8 @@ int loop(int argc, char *argv[])
 	int status = 1;
 	char line[513] = {0};
 	int i = 0;
+	int a = 0;
+
 	setbuf(stdout, NULL);
 
 
@@ -364,6 +366,13 @@ int loop(int argc, char *argv[])
 		while(args)
 		{
 			nextstruct = args->next;
+			a = 0;
+			while(argv[a] != NULL)
+			{
+				free(args->argv[a]);
+				a++;
+			}
+			free(args->argv[a]);
 			free(args->argv);
 			free(args);
 			args = nextstruct;
@@ -403,7 +412,7 @@ int main(int argc, char *argv[])
 
 	if (argc > 1)
 	{
-		if(stat(argv[1], &st) > -1)
+		/*if(stat(argv[1], &st) > -1)
 		{
 			file = fopen(argv[1], "r");
 			while ((read = getline(&line, &len1, file)) != -1) 
@@ -427,20 +436,20 @@ int main(int argc, char *argv[])
 		str = (char *)malloc((len + i + 1) * sizeof(char));
 
 		for(i = 1; i < argc; i++)
-        {
-            strcat(str, argv[i]);
+        	{
+            		strcat(str, argv[i]);
 			if(i != (argc - 1))
 				strcat(str, " ");
-        }
+        	}
 		strcat(str, "\0");
 		status = readline(str, 0);
-        if (status == 2)
-        	return 0;
-        if (status == 0)
-        {
-        	execute(head);
-        }
-		free(str);
+        	if (status == 2)
+        		return 0;
+        	if (status == 0)
+        	{
+        		execute(head);
+        	}
+		free(str);*/
 		return -1;
 	}
 	loop(argc, argv);
