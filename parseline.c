@@ -18,7 +18,7 @@
 int get_line(char *array, int stage, int startpipe, int endpipe);
 sigjmp_buf ctrlc;
 
-
+/* Prints all of the arg values. */
 void printlist()
 {
 	int i;
@@ -35,9 +35,8 @@ void printlist()
 		printf("\nargc %d", find->argc);
 		find = find->next;
 	}
-
 }
-
+/* cd function, which is built into mush. */
 int changedirectory(char *line)
 {
 	char *token;
@@ -58,7 +57,8 @@ int changedirectory(char *line)
 	}
 	return 0;	
 }
-
+/* Is given a stage and checks that stage for formatting errors-
+   returns -1 if errors, status if no errors. */
 int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 {
 	int status = 0;
@@ -108,7 +108,7 @@ int checkstage(char *stage, int stagenum, int startpipe, int endpipe)
 
 	return status;
 }
-
+/* Gets a line of input from the user. */
 int inputline(char line[513])
 {
 	char c;
@@ -133,7 +133,7 @@ int inputline(char line[513])
 	line[i] = '\0';
 	return 0;
 }
-
+/* Spits a line of input into stages. */
 int readline(char *line, int checker)
 {
 	int i = 0;
@@ -155,8 +155,6 @@ int readline(char *line, int checker)
 	}
 	if (strcmp(line, "\n") == 0)
 		return 4;
-	if (strcmp(line, "exit\n") == 0)
-		return 2;
 	if (strncmp(line, "cd", 2) == 0 && (line[2] == '\n' || line[2] == ' '))
 	{
 		changedirectory(line);
@@ -169,9 +167,7 @@ int readline(char *line, int checker)
 		fprintf(stderr, "cmd: no commands given\n");
 		return 3;
 	}
-	if (strcmp(line, "exit") == 0)
-		return 2;
-	/* band aids are amazing */
+	
 	for (i = 0; i < length; i++)
 	{	
 		if (line[i] == '|')
@@ -217,6 +213,7 @@ int readline(char *line, int checker)
 		return -1;
 	return 0;
 }
+/* Returns the number of words that will be in argv in an array. */
 int get_words(char *array)
 {
 	int wordnum = 0;
@@ -235,6 +232,8 @@ int get_words(char *array)
 	return wordnum;	
 
 }
+/* Puts a stage into an arglist struct- returns -1 if failure and
+   0 if success. */
 int get_line(char *array, int stage, int startpipe, int endpipe)
 {
     int sp = startpipe;
@@ -258,13 +257,7 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 	
 	wordnum = get_words(array); 
 	
-
-	/* To do: You can't malloc a set value here for it to free correctly,
- 		so find the number of words + 1 (for NULL) and malloc that */
-	/* changed this to 11 so there's room for a NULL at the end */
 	new_node->argv = malloc((wordnum + 1) * sizeof(char *));
-	
-
 
 	if(head == NULL)
 	{
@@ -281,9 +274,6 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 	}
 	
 	new_node->next = NULL;
-    
-
-
 
 	words = strtok(array, " ");
 
@@ -291,8 +281,7 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
     {     
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
     	{
-			/* Changed this from 512 to the word size */
-		new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
+			new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
         	if(argc > 10)
 			{
 				fprintf(stderr, "Too many arguments.\n");
@@ -329,13 +318,14 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
             geto = 0;
             ep = -2;
         }
-            words = strtok(NULL, " ");
+        words = strtok(NULL, " ");
 	}
-	/* Set the last item in the *char[] to NULL */
+
 	new_node->argv[argc] = NULL;
 	return 0;
 }
-
+/* Repeatedly loops through the line reading and executing
+   process until ^D is entered. */
 int loop(int argc, char *argv[])
 {
 	int status = 1;
@@ -343,7 +333,6 @@ int loop(int argc, char *argv[])
 	int i = 0;
 
 	setbuf(stdout, NULL);
-
 
 	while(sigsetjmp(ctrlc, 1) != 0);
 
@@ -362,7 +351,7 @@ int loop(int argc, char *argv[])
 		freehead();
 	}
 }
-
+/* Handles SIGINT. */
 void handle(int hi)
 {
 		printf("\n");
@@ -370,8 +359,8 @@ void handle(int hi)
 		siglongjmp(ctrlc, 1);
 		return;        
 }
-
-/* We probably shouldn't have main doing too much */
+/* If argc < 2, loop() is called. If argv[1] is a file, the lines from the
+   file are executed. If else, the command entered is executed. */
 int main(int argc, char *argv[])
 {
 	
@@ -386,10 +375,8 @@ int main(int argc, char *argv[])
 	size_t len1 = 0;
 	char read;
 
-
 	signal(SIGINT, handle);
 	
-
 	if (argc > 1)
 	{
 		if(stat(argv[1], &st) > -1)
@@ -416,19 +403,19 @@ int main(int argc, char *argv[])
 		str = (char *)malloc((len + i + 1) * sizeof(char));
 
 		for(i = 1; i < argc; i++)
-        	{
-            		strcat(str, argv[i]);
+        {
+            strcat(str, argv[i]);
 			if(i != (argc - 1))
 				strcat(str, " ");
-        	}
+        }
 		strcat(str, "\0");
 		status = readline(str, 0);
-        	if (status == 2)
-        		return 0;
-        	if (status == 0)
-        	{
-        		execute(head);
-        	}
+        if (status == 2)
+        	return 0;
+        if (status == 0)
+        {
+        	execute(head);
+        }
 		free(str);
 		return -1;
 	}

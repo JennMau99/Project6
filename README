@@ -1,4 +1,8 @@
 Jennifer Maunder (jmaunder)
 Richa Gadgil (rgadgil)
 
+Command line length is <= 512 bytes.
+Commands in a pipeline is <= 10.
+Arguments to a command is <= 10.
+
 Project 6

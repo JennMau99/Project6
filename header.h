@@ -1,4 +1,4 @@
-/* Jennifer Maunder
+/* Jennifer Maunder and Richa Gadgil
  * CPE 357-03
  * Project 6
  */

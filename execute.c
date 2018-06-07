@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+/* Frees everything in the arglist struct. */
 void freehead()
 {
 	int a = 0;
@@ -37,10 +38,8 @@ void freehead()
 		args = nextstruct;
 	}
 	head = NULL;
-	
-	/*free(head);*/
 }
-
+/* Counts the number of args in an arglist struct. */
 int countargs(arglist *argstruct)
 {
 	int count = 0;
@@ -51,7 +50,8 @@ int countargs(arglist *argstruct)
 	}
 	return count;
 }
-
+/* If an execvp errors, checks what was the cause of the
+   error and prints it. */
 int checkerror(arglist *argstruct)
 {
 	DIR *dir = opendir(argstruct->argv[0]);
@@ -65,7 +65,7 @@ int checkerror(arglist *argstruct)
 	fprintf(stderr, "%s: Permission denied\n", argstruct->argv[0]);
 	return 0;
 }
-
+/* Forks and then executes a process in the child. */
 int launchcmd(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
@@ -92,7 +92,6 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
-			/*fprintf(stderr, "Exec failed\n");*/
 			checkerror(argstruct);
 			exit(EXIT_FAILURE);
 			return -1;
@@ -109,7 +108,8 @@ int launchcmd(int origfd, int newfd, arglist *argstruct)
 	}
 	return 0;
 }
-
+/* Forks and then executes a process in the child-
+   only runs on the final stage. */
 int launchfinal(int origfd, int newfd, arglist *argstruct)
 {
 	pid_t pid;
@@ -138,7 +138,6 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 		/*close(newfd);*/
 		if (execvp(argstruct->argv[0], argstruct->argv) < 0)
 		{
-			/*fprintf(stderr, "Exec failed on last stage\n");*/
 			checkerror(argstruct);
 			exit(EXIT_FAILURE);
 			return -1;
@@ -156,8 +155,8 @@ int launchfinal(int origfd, int newfd, arglist *argstruct)
 	}
 	return 0;
 }
-
-
+/* Loops through all of the argstructs and executes the
+   commands for each of them. */
 int execute(arglist *argstruct)
 {
 	int argnum;
