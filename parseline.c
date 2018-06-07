@@ -216,7 +216,24 @@ int readline(char *line, int checker)
 		return -1;
 	return 0;
 }
+int get_words(char *array)
+{
+	int wordnum = 0;
+	char *wording = (char*)malloc((strlen(array) + 1) * sizeof(char));
+	char *words;
+	strcpy(wording, array);
+	words = strtok(wording, " ");
 
+	while(words != NULL)
+	{	
+		if(strcmp(words, "<") != 0 && strcmp(words, ">") != 0)
+			wordnum++;
+		words = strtok(NULL, " ");
+	}
+	free(wording);
+	return wordnum;	
+
+}
 int get_line(char *array, int stage, int startpipe, int endpipe)
 {
     int sp = startpipe;
@@ -231,17 +248,23 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
     char argv[10][512];
 
     char * words;	
-	int i;
+	int wordnum = 0;
 
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
+
 	memset(new_node, '\0', sizeof(arglist));
 	
+	wordnum = get_words(array); 
+	
+
 	/* To do: You can't malloc a set value here for it to free correctly,
  		so find the number of words + 1 (for NULL) and malloc that */
 	/* changed this to 11 so there's room for a NULL at the end */
-	new_node->argv = malloc(11 * sizeof(char *));
+	new_node->argv = malloc((wordnum + 1) * sizeof(char *));
 	
+
+
 	if(head == NULL)
 	{
 		head = new_node;
@@ -257,17 +280,18 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 	}
 	
 	new_node->next = NULL;
+    
 
-    words = strtok(array, " ");
 
-	fprintf(stderr, new_node->input);
-    while(words != NULL)
+
+	  words = strtok(array, " ");
+
+   while(words != NULL)
     {     
 		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
     	{
 			/* Changed this from 512 to the word size */
 			new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
-
         	if(argc > 10)
 			{
 				fprintf(stderr, "Too many arguments.\n");
@@ -308,8 +332,6 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 	}
 	/* Set the last item in the *char[] to NULL */
 	new_node->argv[argc] = NULL;
-	/* The unused indexes between argc and index 10 need to be freed */
-    new_node->argv[10] = NULL;
 	return 0;
 }
 
@@ -378,8 +400,6 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, handle);
 	
-
-
 
 	if (argc > 1)
 	{
