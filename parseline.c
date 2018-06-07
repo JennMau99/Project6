@@ -44,8 +44,7 @@ int changedirectory(char *line)
 	
 	token = strtok(line, " ");
 	token = strtok(NULL, " ");
-
-	if (token == NULL)
+	if (token == NULL || *token == 10)
 	{
 		return 0;
 	}
@@ -232,12 +231,16 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
     char argv[10][512];
 
     char * words;	
+	int i;
 
 	arglist * find;
 	arglist * new_node = (arglist *)malloc(sizeof(arglist));
 	memset(new_node, '\0', sizeof(arglist));
-
-	new_node->argv = malloc(10 * sizeof(char *));
+	
+	/* To do: You can't malloc a set value here for it to free correctly,
+ 		so find the number of words + 1 (for NULL) and malloc that */
+	/* changed this to 11 so there's room for a NULL at the end */
+	new_node->argv = malloc(11 * sizeof(char *));
 	
 	if(head == NULL)
 	{
@@ -260,21 +263,23 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
 	fprintf(stderr, new_node->input);
     while(words != NULL)
     {     
-	if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
-        {
-			new_node->argv[argc] = malloc(512 * sizeof(char));
+		if(strcmp(words, "<") && strcmp(words, ">") && geto == 0 && geti == 0)
+    	{
+			/* Changed this from 512 to the word size */
+			new_node->argv[argc] = malloc((strlen(words) + 1) * sizeof(char));
 
-            if(argc > 10)
+        	if(argc > 10)
 			{
 				fprintf(stderr, "Too many arguments.\n");
-				free(head);
+				new_node->argv[argc] = NULL;
+				freehead();
 				return -1;
 			}
 
 			strcpy(argv[argc], words);           
 			strcpy(new_node->argv[argc],words);
-            argc++;
-        }
+        	argc++;
+    	}	
 		
 		new_node->argc = argc;
 	    if(sp == -1 && strcmp(words, "<") == 0)
@@ -301,11 +306,18 @@ int get_line(char *array, int stage, int startpipe, int endpipe)
         }
             words = strtok(NULL, " ");
 	}
-    return 0;
+	/* Set the last item in the *char[] to NULL */
+	new_node->argv[argc] = NULL;
+	/* The unused indexes between argc and index 10 need to be freed */
+    new_node->argv[10] = NULL;
+	return 0;
 }
 
 int loop(int argc, char *argv[])
 {
+	arglist *nextstruct;
+	arglist *args;
+
 	int status = 1;
 	char line[513] = {0};
 	int i = 0;
@@ -326,10 +338,19 @@ int loop(int argc, char *argv[])
 		{
 			execute(head);
 		}
+		args = head;
+		while(args)
+		{
+			nextstruct = args->next;
+			free(args->argv);
+			free(args);
+			args = nextstruct;
+		}
+		head = NULL;
+		
+		freehead();
 	}
 }
-
-
 
 void handle(int hi)
 {
@@ -365,15 +386,16 @@ int main(int argc, char *argv[])
 		if(stat(argv[1], &st) > -1)
 		{
 			file = fopen(argv[1], "r");
-			while ((read = getline(&line, &len1, file)) != -1) {
+			while ((read = getline(&line, &len1, file)) != -1) 
+			{
 				status = readline(line, 0);
 				
 				if (status == 2)
-                 		       return 0;
-               	 		if (status == 0)
-                		{
-                        		execute(head);
-                		}	
+                	return 0;
+               	if (status == 0)
+               	{
+                    execute(head);
+                }	
 
 			}	
 			return 1;
@@ -385,19 +407,20 @@ int main(int argc, char *argv[])
 		str = (char *)malloc((len + i + 1) * sizeof(char));
 
 		for(i = 1; i < argc; i++)
-                {
-                	strcat(str, argv[i]);
+        {
+            strcat(str, argv[i]);
 			if(i != (argc - 1))
 				strcat(str, " ");
-                }
+        }
 		strcat(str, "\0");
 		status = readline(str, 0);
-                if (status == 2)
-                        return 0;
-                if (status == 0)
-                {
-                	execute(head);
-                }
+        if (status == 2)
+        	return 0;
+        if (status == 0)
+        {
+        	execute(head);
+        }
+		free(str);
 		return -1;
 	}
 	loop(argc, argv);

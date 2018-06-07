@@ -15,4 +15,5 @@ typedef struct alist arglist;
 
 arglist *head;
 
+void freehead();
 int execute(arglist *argstruct);

@@ -17,6 +17,23 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+void freehead()
+{
+
+	arglist *nextstruct;
+	arglist *args = head;
+	while(args)
+	{
+		nextstruct = args->next;
+		free(args->argv);
+		free(args);
+		args = nextstruct;
+	}
+	head = NULL;
+	
+	/*free(head);*/
+}
+
 int countargs(arglist *argstruct)
 {
 	int count = 0;
@@ -144,7 +161,7 @@ int execute(arglist *argstruct)
 	if (argstruct->next == NULL)
 	{
 		origfd = launchfinal(origfd, 1, argstruct);
-		free(head);
+		freehead();
 		return 0;
 	}
 	for (i = 0; i < argnum; i++)
@@ -156,7 +173,7 @@ int execute(arglist *argstruct)
 			close(newfd[1]);
 			if (origfd < 0)
 			{
-				free(head);
+				freehead();
 				return -1;
 			}
 			origfd = newfd[0];
@@ -167,6 +184,6 @@ int execute(arglist *argstruct)
 	}
 	close(newfd[0]);
 	fflush(stdout);
-	free(head);
+	freehead();
 	return 0;
 }
